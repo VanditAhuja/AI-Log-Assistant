@@ -1,15 +1,18 @@
 from parser.parser import parse_log_file
+from collections import Counter
 
 logs = parse_log_file("logs/sample.log")
 
-print("=== ALL LOGS ===")
-for log in logs:
-    print(log)
+print("=== LOG SUMMARY ===")
+levels = [log["level"] for log in logs]
+count = Counter(levels)
 
-print("\n=== ERRORS ONLY ===")
-errors = [log for log in logs if log["level"] == "ERROR"]
-for error in errors:
-    print(error)
+for level, total in count.items():
+    print(f"{level}: {total}")
 
 print(f"\nTotal logs: {len(logs)}")
-print(f"Total errors: {len(errors)}")
+
+errors = [log for log in logs if log["level"] == "ERROR"]
+print("\n=== ERRORS ===")
+for error in errors:
+    print(f"[{error['date']}] {error['message']}")
