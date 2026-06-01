@@ -1,0 +1,34 @@
+2026-06-01 08:00:01 INFO Application server started on port 8080
+2026-06-01 08:00:02 INFO Database connection established successfully
+2026-06-01 08:00:03 INFO Cache server connected at redis://localhost:6379
+2026-06-01 08:01:15 INFO User login successful for user_id=1042
+2026-06-01 08:01:45 INFO User login successful for user_id=1087
+2026-06-01 08:02:10 WARNING High memory usage detected: 78% of available RAM used
+2026-06-01 08:02:45 INFO API request received: GET /api/v1/dashboard user_id=1042
+2026-06-01 08:03:01 INFO API request received: POST /api/v1/orders user_id=1087
+2026-06-01 08:03:05 ERROR Database query timeout after 30s: SELECT * FROM orders WHERE user_id=1087
+2026-06-01 08:03:06 ERROR Failed to process order for user_id=1087 - transaction rolled back
+2026-06-01 08:04:22 WARNING CPU usage spike detected: 91% utilization on core 3
+2026-06-01 08:04:50 INFO Scheduled job started: daily_report_generator
+2026-06-01 08:05:10 ERROR Authentication failed for user_id=2091 - invalid token
+2026-06-01 08:05:11 WARNING Repeated login failure detected for IP 192.168.1.105
+2026-06-01 08:05:33 INFO API request received: GET /api/v1/products user_id=1042
+2026-06-01 08:06:01 ERROR Disk I/O error on /var/data/logs - write operation failed
+2026-06-01 08:06:45 INFO Cache miss for key: user_session_1042 - fetching from database
+2026-06-01 08:07:02 WARNING Memory usage critical: 92% of available RAM used
+2026-06-01 08:07:30 ERROR Out of memory error - killing process PID 4821
+2026-06-01 08:07:31 ERROR Service crash detected: payment-service is unresponsive
+2026-06-01 08:07:32 CRITICAL System alert: payment-service down - initiating auto-restart
+2026-06-01 08:07:45 INFO payment-service restarted successfully
+2026-06-01 08:08:10 INFO Database connection re-established after retry attempt 3
+2026-06-01 08:08:45 WARNING SSL certificate expiring in 7 days for domain api.example.com
+2026-06-01 08:09:01 INFO User logout for user_id=1042
+2026-06-01 08:09:15 ERROR Failed to send email notification to user_id=3012 - SMTP timeout
+2026-06-01 08:10:00 INFO Scheduled job completed: daily_report_generator
+2026-06-01 08:10:30 WARNING Slow API response detected: POST /api/v1/orders took 4500ms
+2026-06-01 08:11:00 ERROR Null pointer exception in OrderService.java line 284
+2026-06-01 08:11:01 ERROR Stack trace: java.lang.NullPointerException at OrderService.processOrder
+2026-06-01 08:12:00 INFO Auto-scaling triggered: adding 2 new instances
+2026-06-01 08:12:30 INFO New instance i-0a1b2c3d started successfully
+2026-06-01 08:13:00 INFO Load balancer updated with new instances
+2026-06-01 08:14:00 INFO System health check passed - all services operational
