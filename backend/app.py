@@ -6,6 +6,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from parser.parser import parse_log_file
+from ai.ai_engine import analyze_logs
 from collections import Counter
 
 app = FastAPI()
@@ -30,11 +31,14 @@ async def upload_log(file: UploadFile = File(...)):
     logs = parse_log_file(filepath)
     levels = [log["level"] for log in logs]
     count = Counter(levels)
-    errors = [log for log in logs if log["level"] == "ERROR"]
+    errors = [log for log in logs if log["level"] in ["ERROR", "CRITICAL"]]
+
+    ai_analysis = analyze_logs(errors)
 
     return {
         "filename": file.filename,
         "total_logs": len(logs),
         "summary": count,
-        "errors": errors
+        "errors": errors,
+        "ai_analysis": ai_analysis
     }
