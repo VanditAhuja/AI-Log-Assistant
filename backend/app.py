@@ -1,3 +1,5 @@
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
@@ -10,6 +12,12 @@ from ai.ai_engine import analyze_logs
 from collections import Counter
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+@app.get("/app")
+def serve_frontend():
+    return FileResponse("frontend/index.html")  
 
 app.add_middleware(
     CORSMiddleware,
