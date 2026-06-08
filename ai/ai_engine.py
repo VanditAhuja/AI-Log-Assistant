@@ -61,3 +61,28 @@ Keep your response clear and concise."""
 
 Note: Live AI analysis will be available when API quota resets."""
         return f"AI analysis unavailable: {str(e)}"
+    
+def chat_about_logs(logs, question):
+    log_text = "\n".join([
+        f"[{l['date']} {l.get('time','')}] {l['level']}: {l['message']}"
+        for l in logs
+    ])
+    
+    prompt = f"""You are an expert DevOps engineer. Here are the application logs:
+
+{log_text}
+
+Answer this question about the logs: {question}
+
+Be concise and helpful."""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        return response.text
+    except Exception as e:
+        if "429" in str(e):
+            return "AI quota exceeded. Please try again tomorrow."
+        return f"Chat unavailable: {str(e)}"

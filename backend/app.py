@@ -50,3 +50,20 @@ async def upload_log(file: UploadFile = File(...)):
         "errors": errors,
         "ai_analysis": ai_analysis
     }
+from pydantic import BaseModel
+
+class ChatRequest(BaseModel):
+    question: str
+    filename: str
+
+@app.post("/chat")
+async def chat_with_logs(request: ChatRequest):
+    filepath = f"logs/{request.filename}"
+    
+    if not os.path.exists(filepath):
+        return {"answer": "Log file not found. Please upload a file first."}
+    
+    logs = parse_log_file(filepath)
+    from ai.ai_engine import chat_about_logs
+    answer = chat_about_logs(logs, request.question)
+    return {"answer": answer}
