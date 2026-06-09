@@ -47,6 +47,15 @@
         .file-info span { color: #e2e8f0; }
     </style>
 </head>
+<div class="section" id="chatSection" style="display:none; margin-top:20px;">
+            <h3>Chat with your logs</h3>
+            <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="chatInput" placeholder="Ask a question about your logs..." 
+                style="flex:1; background:#12151f; border:1px solid #2d3748; border-radius:8px; padding:12px; color:#e2e8f0; font-size:14px;">
+                <button onclick="sendChat()" style="background:#6366f1; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Ask</button>
+            </div>
+        </div>
 <body>
     <div class="header">
         <h1>AI Log Intelligence Assistant</h1>
@@ -99,6 +108,9 @@
 
             document.getElementById('uploadCard').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
+            document.getElementById('filename').textContent = data.filename;
+            currentFile = data.filename;
+            document.getElementById('chatSection').style.display = 'block';
 
             const formData = new FormData();
             formData.append('file', file);
@@ -139,6 +151,25 @@
             document.getElementById('fileName').textContent = 'No file selected';
             document.getElementById('logFile').value = '';
         }
+        let currentFile = '';
+
+async function sendChat() {
+    const question = document.getElementById('chatInput').value;
+    if (!question) return;
+
+    const messages = document.getElementById('chatMessages');
+    messages.innerHTML += `<div style="background:#12151f; padding:10px; border-radius:8px; margin-bottom:8px;"><span style="color:#6366f1;">You:</span> ${question}</div>`;
+    document.getElementById('chatInput').value = '';
+
+    const r = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question, filename: currentFile})
+    });
+    const data = await r.json();
+    messages.innerHTML += `<div style="background:#1a1d2e; padding:10px; border-radius:8px; margin-bottom:8px; border-left:3px solid #6366f1;"><span style="color:#68d391;">AI:</span> ${data.answer}</div>`;
+    messages.scrollTop = messages.scrollHeight;
+}
     </script>
 </body>
 </html>
