@@ -47,14 +47,6 @@
         .file-info span { color: #e2e8f0; }
     </style>
 </head>
-<div class="section" id="chatSection" style="display:none; margin-top:20px;">
-            <h3>Chat with your logs</h3>
-            <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="chatInput" placeholder="Ask a question about your logs..." 
-                style="flex:1; background:#12151f; border:1px solid #2d3748; border-radius:8px; padding:12px; color:#e2e8f0; font-size:14px;">
-                <button onclick="sendChat()" style="background:#6366f1; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Ask</button>
-            </div>
         </div>
 <body>
     <div class="header">
@@ -92,7 +84,14 @@
                 <h3>AI Root Cause Analysis</h3>
                 <div class="ai-box" id="aiAnalysis"></div>
             </div>
-
+<div class="section" id="chatSection" style="display:none; margin-top:20px;">
+            <h3>Chat with your logs</h3>
+            <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="chatInput" placeholder="Ask a question about your logs..." 
+                style="flex:1; background:#12151f; border:1px solid #2d3748; border-radius:8px; padding:12px; color:#e2e8f0; font-size:14px;">
+                <button onclick="sendChat()" style="background:#6366f1; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Ask</button>
+            </div>
             <button class="analyze-btn" onclick="reset()" style="background:#2d3748; margin-top:8px;">Analyze another file</button>
         </div>
     </div>
@@ -103,47 +102,45 @@
         }
 
         async function uploadLog() {
-            const file = document.getElementById('logFile').files[0];
-            if (!file) { alert('Please select a log file!'); return; }
+    const file = document.getElementById('logFile').files[0];
+    if (!file) { alert('Please select a log file!'); return; }
 
-            document.getElementById('uploadCard').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('filename').textContent = data.filename;
-            currentFile = data.filename;
-            document.getElementById('chatSection').style.display = 'block';
+    document.getElementById('uploadCard').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
 
-            const formData = new FormData();
-            formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', file);
 
-            try {
-                const response = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
-                const data = await response.json();
+    try {
+        const response = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
+        const data = await response.json();
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('results').style.display = 'block';
-                document.getElementById('filename').textContent = data.filename;
-                document.getElementById('total').textContent = data.total_logs;
-
-                const colors = { INFO: 'info-val', WARNING: 'warning-val', ERROR: 'error-val', CRITICAL: 'critical-val' };
-                let statsHTML = '';
-                for (const [level, count] of Object.entries(data.summary)) {
-                    statsHTML += `<div class="stat-card"><div class="label">${level}</div><div class="value ${colors[level] || 'total-val'}">${count}</div></div>`;
-                }
-                document.getElementById('statsGrid').innerHTML = statsHTML;
-
-                let errorsHTML = '';
-                data.errors.forEach(e => {
-                    const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
-                    errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
-                });
-                document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
-                document.getElementById('aiAnalysis').textContent = data.ai_analysis;
-            } catch (err) {
-                alert('Error connecting to server. Make sure uvicorn is running!');
-                reset();
-            }
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('filename').textContent = data.filename;
+        document.getElementById('total').textContent = data.total_logs;
+        currentFile = data.filename;
+        document.getElementById('chatSection').style.display = 'block';
+        
+        const colors = { INFO: 'info-val', WARNING: 'warning-val', ERROR: 'error-val', CRITICAL: 'critical-val' };
+        let statsHTML = '';
+        for (const [level, count] of Object.entries(data.summary)) {
+            statsHTML += `<div class="stat-card"><div class="label">${level}</div><div class="value ${colors[level] || 'total-val'}">${count}</div></div>`;
         }
+        document.getElementById('statsGrid').innerHTML = statsHTML;
 
+        let errorsHTML = '';
+        data.errors.forEach(e => {
+            const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
+            errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
+        });
+        document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
+        document.getElementById('aiAnalysis').textContent = data.ai_analysis;
+    } catch (err) {
+        alert('Error connecting to server. Make sure uvicorn is running!');
+        reset();
+    }
+}
         function reset() {
             document.getElementById('uploadCard').style.display = 'block';
             document.getElementById('results').style.display = 'none';
