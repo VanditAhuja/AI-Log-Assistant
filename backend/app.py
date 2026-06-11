@@ -1,3 +1,4 @@
+from backend.database import save_to_history, load_history
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, UploadFile, File
@@ -42,8 +43,9 @@ async def upload_log(file: UploadFile = File(...)):
     errors = [log for log in logs if log["level"] in ["ERROR", "CRITICAL"]]
 
     ai_analysis = analyze_logs(errors)
-
+    save_to_history(file.filename, len(logs), dict(count), errors, ai_analysis)
     return {
+       
         "filename": file.filename,
         "total_logs": len(logs),
         "summary": count,
@@ -67,3 +69,6 @@ async def chat_with_logs(request: ChatRequest):
     from ai.ai_engine import chat_about_logs
     answer = chat_about_logs(logs, request.question)
     return {"answer": answer}
+@app.get("/history")
+def get_history():
+    return load_history()

@@ -15,12 +15,11 @@
         .upload-card { background: #1a1d2e; border: 1px dashed #3d4566; border-radius: 16px; padding: 48px; text-align: center; }
         .upload-card h2 { font-size: 22px; color: #fff; margin-bottom: 8px; }
         .upload-card p { color: #718096; margin-bottom: 28px; font-size: 14px; }
-        .file-input-wrapper { position: relative; display: inline-block; margin-bottom: 20px; }
-        .file-input-wrapper input[type="file"] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-        .file-btn { background: #2d3748; color: #a0aec0; border: 1px solid #3d4566; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .file-name { font-size: 13px; color: #68d391; margin-top: 8px; }
-        .analyze-btn { background: #6366f1; color: white; border: none; padding: 14px 36px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; display: block; margin: 20px auto 0; transition: background 0.2s; }
+        .analyze-btn { background: #6366f1; color: white; border: none; padding: 14px 36px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; display: inline-block; margin: 20px auto 0; transition: background 0.2s; }
         .analyze-btn:hover { background: #5254cc; }
+        .btn-gray { background: #2d3748; margin-left: 10px; }
+        .btn-gray:hover { background: #3d4a5c; }
         .loading { text-align: center; padding: 40px; color: #718096; display: none; }
         .spinner { width: 40px; height: 40px; border: 3px solid #2d3748; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -45,9 +44,12 @@
         .ai-box { background: #12151f; border-radius: 10px; padding: 20px; font-size: 14px; line-height: 1.8; color: #cbd5e0; white-space: pre-wrap; border: 1px solid #2d3748; }
         .file-info { display: flex; align-items: center; gap: 8px; background: #12151f; border-radius: 8px; padding: 10px 16px; margin-bottom: 24px; font-size: 13px; color: #718096; }
         .file-info span { color: #e2e8f0; }
+        .chat-msg-user { background: #12151f; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+        .chat-msg-ai { background: #1a1d2e; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #6366f1; font-size: 14px; line-height: 1.7; }
+        .history-item { background: #12151f; padding: 16px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #6366f1; }
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
     </style>
 </head>
-        </div>
 <body>
     <div class="header">
         <h1>AI Log Intelligence Assistant</h1>
@@ -55,19 +57,25 @@
     </div>
 
     <div class="container">
+
+        <!-- Upload Section -->
         <div class="upload-card" id="uploadCard">
             <h2>Upload your log file</h2>
             <p>Supports .log and .txt files — AI will analyze errors and suggest fixes</p>
-            <input type="file" id="logFile" accept=".log,.txt" onchange="updateFileName(this)" style="color: #a0aec0; background: #2d3748; border: 1px solid #3d4566; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; width: 300px;">
+            <input type="file" id="logFile" accept=".log,.txt" onchange="updateFileName(this)"
+                style="color:#a0aec0; background:#2d3748; border:1px solid #3d4566; padding:12px 20px; border-radius:8px; font-size:14px; cursor:pointer; width:300px;">
             <div class="file-name" id="fileName">No file selected</div>
             <button class="analyze-btn" onclick="uploadLog()">Analyze with AI</button>
+            <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
         </div>
 
+        <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>Analyzing logs with AI...</p>
         </div>
 
+        <!-- Results -->
         <div class="results" id="results">
             <div class="file-info">
                 File: <span id="filename"></span> &nbsp;|&nbsp; Total logs: <span id="total"></span>
@@ -84,89 +92,142 @@
                 <h3>AI Root Cause Analysis</h3>
                 <div class="ai-box" id="aiAnalysis"></div>
             </div>
-<div class="section" id="chatSection" style="display:none; margin-top:20px;">
-            <h3>Chat with your logs</h3>
-            <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="chatInput" placeholder="Ask a question about your logs..." 
-                style="flex:1; background:#12151f; border:1px solid #2d3748; border-radius:8px; padding:12px; color:#e2e8f0; font-size:14px;">
-                <button onclick="sendChat()" style="background:#6366f1; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Ask</button>
+
+            <div class="section">
+                <h3>Chat with your logs</h3>
+                <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="chatInput" placeholder="Ask a question about your logs..."
+                        onkeypress="if(event.key==='Enter') sendChat()"
+                        style="flex:1; background:#12151f; border:1px solid #2d3748; border-radius:8px; padding:12px; color:#e2e8f0; font-size:14px;">
+                    <button onclick="sendChat()" style="background:#6366f1; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Ask</button>
+                </div>
             </div>
-            <button class="analyze-btn" onclick="reset()" style="background:#2d3748; margin-top:8px;">Analyze another file</button>
+
+            <div class="btn-row">
+                <button class="analyze-btn btn-gray" onclick="resetPage()">Analyze another file</button>
+                <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
+            </div>
         </div>
+
+        <!-- History Section -->
+        <div id="historySection" style="display:none; margin-top:32px;">
+            <div class="section">
+                <h3>Upload History</h3>
+                <div id="historyList"></div>
+                <button class="analyze-btn btn-gray" onclick="hideHistory()" style="margin-top:16px;">Close History</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
+        let currentFile = '';
+
         function updateFileName(input) {
             document.getElementById('fileName').textContent = input.files[0]?.name || 'No file selected';
         }
 
         async function uploadLog() {
-    const file = document.getElementById('logFile').files[0];
-    if (!file) { alert('Please select a log file!'); return; }
+            const file = document.getElementById('logFile').files[0];
+            if (!file) { alert('Please select a log file!'); return; }
 
-    document.getElementById('uploadCard').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
+            document.getElementById('uploadCard').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
 
-    const formData = new FormData();
-    formData.append('file', file);
+            const formData = new FormData();
+            formData.append('file', file);
 
-    try {
-        const response = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
-        const data = await response.json();
+            try {
+                const response = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
+                const data = await response.json();
 
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('results').style.display = 'block';
-        document.getElementById('filename').textContent = data.filename;
-        document.getElementById('total').textContent = data.total_logs;
-        currentFile = data.filename;
-        document.getElementById('chatSection').style.display = 'block';
-        
-        const colors = { INFO: 'info-val', WARNING: 'warning-val', ERROR: 'error-val', CRITICAL: 'critical-val' };
-        let statsHTML = '';
-        for (const [level, count] of Object.entries(data.summary)) {
-            statsHTML += `<div class="stat-card"><div class="label">${level}</div><div class="value ${colors[level] || 'total-val'}">${count}</div></div>`;
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('filename').textContent = data.filename;
+                document.getElementById('total').textContent = data.total_logs;
+                currentFile = data.filename;
+
+                const colors = { INFO: 'info-val', WARNING: 'warning-val', ERROR: 'error-val', CRITICAL: 'critical-val' };
+                let statsHTML = '';
+                for (const [level, count] of Object.entries(data.summary)) {
+                    statsHTML += `<div class="stat-card"><div class="label">${level}</div><div class="value ${colors[level] || 'total-val'}">${count}</div></div>`;
+                }
+                document.getElementById('statsGrid').innerHTML = statsHTML;
+
+                let errorsHTML = '';
+                data.errors.forEach(e => {
+                    const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
+                    errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
+                });
+                document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
+                document.getElementById('aiAnalysis').textContent = data.ai_analysis;
+
+            } catch (err) {
+                alert('Error connecting to server. Make sure uvicorn is running!');
+                resetPage();
+            }
         }
-        document.getElementById('statsGrid').innerHTML = statsHTML;
 
-        let errorsHTML = '';
-        data.errors.forEach(e => {
-            const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
-            errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
-        });
-        document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
-        document.getElementById('aiAnalysis').textContent = data.ai_analysis;
-    } catch (err) {
-        alert('Error connecting to server. Make sure uvicorn is running!');
-        reset();
-    }
-}
-        function reset() {
+        async function sendChat() {
+            const question = document.getElementById('chatInput').value;
+            if (!question) return;
+
+            const messages = document.getElementById('chatMessages');
+            messages.innerHTML += `<div class="chat-msg-user"><span style="color:#6366f1;">You:</span> ${question}</div>`;
+            document.getElementById('chatInput').value = '';
+            messages.innerHTML += `<div class="chat-msg-ai" id="thinking"><span style="color:#68d391;">AI:</span> Thinking...</div>`;
+            messages.scrollTop = messages.scrollHeight;
+
+            const r = await fetch('http://127.0.0.1:8000/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, filename: currentFile })
+            });
+            const data = await r.json();
+            document.getElementById('thinking').outerHTML = `<div class="chat-msg-ai"><span style="color:#68d391;">AI:</span> ${data.answer}</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        async function showHistory() {
+            const r = await fetch('http://127.0.0.1:8000/history');
+            const history = await r.json();
+
+            document.getElementById('historySection').style.display = 'block';
+
+            let html = '';
+            history.reverse().forEach(h => {
+                html += `
+                <div class="history-item">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="color:#e2e8f0; font-weight:500;">${h.filename}</span>
+                        <span style="color:#718096; font-size:12px;">${h.timestamp}</span>
+                    </div>
+                    <div style="display:flex; gap:16px; font-size:13px;">
+                        <span style="color:#63b3ed;">Total: ${h.total_logs}</span>
+                        <span style="color:#fc8181;">Errors: ${h.error_count}</span>
+                        <span style="color:#f6ad55;">Warnings: ${h.summary.WARNING || 0}</span>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('historyList').innerHTML = html || '<p style="color:#718096">No history yet</p>';
+        }
+
+        function hideHistory() {
+            document.getElementById('historySection').style.display = 'none';
+        }
+
+        function resetPage() {
             document.getElementById('uploadCard').style.display = 'block';
             document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
+            document.getElementById('historySection').style.display = 'none';
             document.getElementById('fileName').textContent = 'No file selected';
             document.getElementById('logFile').value = '';
+            document.getElementById('chatMessages').innerHTML = '';
+            currentFile = '';
         }
-        let currentFile = '';
-
-async function sendChat() {
-    const question = document.getElementById('chatInput').value;
-    if (!question) return;
-
-    const messages = document.getElementById('chatMessages');
-    messages.innerHTML += `<div style="background:#12151f; padding:10px; border-radius:8px; margin-bottom:8px;"><span style="color:#6366f1;">You:</span> ${question}</div>`;
-    document.getElementById('chatInput').value = '';
-
-    const r = await fetch('http://127.0.0.1:8000/chat', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({question, filename: currentFile})
-    });
-    const data = await r.json();
-    messages.innerHTML += `<div style="background:#1a1d2e; padding:10px; border-radius:8px; margin-bottom:8px; border-left:3px solid #6366f1;"><span style="color:#68d391;">AI:</span> ${data.answer}</div>`;
-    messages.scrollTop = messages.scrollHeight;
-}
     </script>
 </body>
 </html>
