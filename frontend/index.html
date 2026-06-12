@@ -3,231 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <title>AI Log Assistant</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
-        .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 20px 40px; display: flex; align-items: center; gap: 12px; }
-        .header h1 { font-size: 20px; font-weight: 600; color: #fff; }
-        .header span { font-size: 13px; color: #718096; background: #2d3748; padding: 4px 10px; border-radius: 20px; }
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
-        .upload-card { background: #1a1d2e; border: 1px dashed #3d4566; border-radius: 16px; padding: 48px; text-align: center; }
-        .upload-card h2 { font-size: 22px; color: #fff; margin-bottom: 8px; }
-        .upload-card p { color: #718096; margin-bottom: 28px; font-size: 14px; }
-        .file-name { font-size: 13px; color: #68d391; margin-top: 8px; }
-        .analyze-btn { background: #6366f1; color: white; border: none; padding: 14px 36px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; display: inline-block; margin: 20px auto 0; transition: background 0.2s; }
-        .analyze-btn:hover { background: #5254cc; }
-        .btn-gray { background: #2d3748; margin-left: 10px; }
-        .btn-gray:hover { background: #3d4a5c; }
-        .loading { text-align: center; padding: 40px; color: #718096; display: none; }
-        .spinner { width: 40px; height: 40px; border: 3px solid #2d3748; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060810;
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(139,92,246,0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, rgba(59,130,246,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Particle canvas */
+        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+        .header {
+            position: relative; z-index: 10;
+            background: rgba(15,17,30,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(99,102,241,0.2);
+            padding: 18px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header span {
+            font-size: 12px;
+            color: #6366f1;
+            background: rgba(99,102,241,0.1);
+            border: 1px solid rgba(99,102,241,0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; position: relative; z-index: 10; }
+
+        /* Glassmorphism cards */
+        .glass {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            transition: transform 0.1s ease, box-shadow 0.3s ease;
+        }
+
+        .glass:hover {
+            box-shadow: 0 0 30px rgba(99,102,241,0.15), 0 0 60px rgba(99,102,241,0.05);
+        }
+
+        .upload-card {
+            padding: 60px 48px;
+            text-align: center;
+        }
+
+        .upload-card h2 {
+            font-size: 28px;
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-card p { color: #718096; margin-bottom: 32px; font-size: 15px; }
+
+        .file-name { font-size: 13px; color: #68d391; margin-top: 10px; font-family: 'JetBrains Mono', monospace; }
+
+        /* Neon glow button */
+        .analyze-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-block;
+            margin: 20px 6px 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.4s ease;
+        }
+
+        .analyze-btn:hover::before { left: 100%; }
+
+        .analyze-btn:hover {
+            box-shadow: 0 0 20px rgba(99,102,241,0.6), 0 0 40px rgba(99,102,241,0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-gray {
+            background: rgba(45,55,72,0.8);
+            box-shadow: none;
+        }
+
+        .btn-gray:hover {
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+            background: rgba(55,65,82,0.9);
+        }
+
+        .loading { text-align: center; padding: 60px; color: #718096; display: none; }
+
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(99,102,241,0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(99,102,241,0.3);
+        }
+
         @keyframes spin { to { transform: rotate(360deg); } }
+
         .results { display: none; margin-top: 32px; }
+
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: #1a1d2e; border-radius: 12px; padding: 20px 24px; border: 1px solid #2d3748; }
-        .stat-card .label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .stat-card .value { font-size: 32px; font-weight: 600; }
-        .info-val { color: #63b3ed; }
-        .warning-val { color: #f6ad55; }
-        .error-val { color: #fc8181; }
-        .critical-val { color: #e879f9; }
-        .total-val { color: #68d391; }
-        .section { background: #1a1d2e; border-radius: 12px; padding: 24px; border: 1px solid #2d3748; margin-bottom: 20px; }
-        .section h3 { font-size: 15px; font-weight: 500; color: #a0aec0; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .error-item { padding: 12px 16px; background: #12151f; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #fc8181; }
-        .error-item .time { font-size: 12px; color: #718096; margin-bottom: 4px; font-family: monospace; }
+
+        .stat-card {
+            padding: 24px;
+            text-align: center;
+            cursor: default;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value { font-size: 36px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+        .info-val { color: #63b3ed; text-shadow: 0 0 20px rgba(99,179,237,0.5); }
+        .warning-val { color: #f6ad55; text-shadow: 0 0 20px rgba(246,173,85,0.5); }
+        .error-val { color: #fc8181; text-shadow: 0 0 20px rgba(252,129,129,0.5); }
+        .critical-val { color: #e879f9; text-shadow: 0 0 20px rgba(232,121,249,0.5); }
+        .total-val { color: #68d391; text-shadow: 0 0 20px rgba(104,211,145,0.5); }
+
+        .section { padding: 24px; margin-bottom: 20px; }
+
+        .section h3 {
+            font-size: 11px;
+            font-weight: 500;
+            color: #6366f1;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section h3::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(99,102,241,0.3), transparent);
+        }
+
+        .error-item {
+            padding: 14px 16px;
+            background: rgba(252,129,129,0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 2px solid rgba(252,129,129,0.4);
+            transition: all 0.2s ease;
+        }
+
+        .error-item:hover {
+            background: rgba(252,129,129,0.08);
+            border-left-color: #fc8181;
+            transform: translateX(4px);
+        }
+
+        .error-item .time {
+            font-size: 11px;
+            color: #718096;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         .error-item .msg { font-size: 14px; color: #e2e8f0; }
-        .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-right: 6px; }
-        .badge-error { background: #4a1c1c; color: #fc8181; }
-        .badge-critical { background: #3d1a4a; color: #e879f9; }
-        .ai-box { background: #12151f; border-radius: 10px; padding: 20px; font-size: 14px; line-height: 1.8; color: #cbd5e0; white-space: pre-wrap; border: 1px solid #2d3748; }
-        .file-info { display: flex; align-items: center; gap: 8px; background: #12151f; border-radius: 8px; padding: 10px 16px; margin-bottom: 24px; font-size: 13px; color: #718096; }
-        .file-info span { color: #e2e8f0; }
-        .chat-msg-user { background: #12151f; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
-        .chat-msg-ai { background: #1a1d2e; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #6366f1; font-size: 14px; line-height: 1.7; }
-        .history-item { background: #12151f; padding: 16px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #6366f1; }
-        .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+
+        .badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-error { background: rgba(252,129,129,0.15); color: #fc8181; border: 1px solid rgba(252,129,129,0.3); }
+        .badge-critical { background: rgba(232,121,249,0.15); color: #e879f9; border: 1px solid rgba(232,121,249,0.3); }
+
+        .ai-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.9;
+            color: #cbd5e0;
+            white-space: pre-wrap;
+            border: 1px solid rgba(99,102,241,0.15);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #718096;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .file-info span { color: #a78bfa; }
+
+        .chat-msg-user {
+            background: rgba(99,102,241,0.08);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border: 1px solid rgba(99,102,241,0.15);
+        }
+
+        .chat-msg-ai {
+            background: rgba(0,0,0,0.3);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 2px solid #6366f1;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .chat-input-row { display: flex; gap: 10px; }
+
+        .chat-input-row input {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e2e8f0;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-input-row input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99,102,241,0.2);
+        }
+
+        .history-item {
+            background: rgba(0,0,0,0.3);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 2px solid rgba(99,102,241,0.4);
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            border-left-color: #6366f1;
+            transform: translateX(4px);
+            background: rgba(99,102,241,0.05);
+        }
+
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap; }
+
+        /* Tilt effect */
+        .tilt { transform-style: preserve-3d; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>AI Log Intelligence Assistant</h1>
-        <span>HCLtech Internship Project</span>
+
+<canvas id="particles"></canvas>
+
+<div class="header">
+    <h1>AI Log Intelligence Assistant</h1>
+    <span>HCLtech Internship</span>
+</div>
+
+<div class="container">
+
+    <div class="upload-card glass tilt" id="uploadCard">
+        <h2>Drop your log file</h2>
+        <p>AI-powered error detection, root cause analysis, and intelligent debugging</p>
+        <input type="file" id="logFile" accept=".log,.txt" onchange="updateFileName(this)"
+            style="color:#a0aec0; background:rgba(45,55,72,0.6); border:1px solid rgba(99,102,241,0.3); padding:12px 20px; border-radius:8px; font-size:14px; cursor:pointer; width:320px;">
+        <div class="file-name" id="fileName">No file selected</div>
+        <button class="analyze-btn" onclick="uploadLog()">Analyze with AI</button>
+        <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
     </div>
 
-    <div class="container">
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>AI is analyzing your logs...</p>
+    </div>
 
-        <!-- Upload Section -->
-        <div class="upload-card" id="uploadCard">
-            <h2>Upload your log file</h2>
-            <p>Supports .log and .txt files — AI will analyze errors and suggest fixes</p>
-            <input type="file" id="logFile" accept=".log,.txt" onchange="updateFileName(this)"
-                style="color:#a0aec0; background:#2d3748; border:1px solid #3d4566; padding:12px 20px; border-radius:8px; font-size:14px; cursor:pointer; width:300px;">
-            <div class="file-name" id="fileName">No file selected</div>
-            <button class="analyze-btn" onclick="uploadLog()">Analyze with AI</button>
+    <div class="results" id="results">
+        <div class="file-info">
+            <span>📄</span> File: <span id="filename"></span> &nbsp;|&nbsp; Total logs: <span id="total"></span>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="section glass tilt">
+            <h3>Log Distribution</h3>
+            <canvas id="logChart" style="max-height:280px;"></canvas>
+        </div>
+
+        <div class="section glass tilt">
+            <h3>Errors & Critical Events</h3>
+            <div id="errorList"></div>
+        </div>
+
+        <div class="section glass tilt">
+            <h3>AI Root Cause Analysis</h3>
+            <div class="ai-box" id="aiAnalysis"></div>
+        </div>
+
+        <div class="section glass tilt">
+            <h3>Chat with your logs</h3>
+            <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
+            <div class="chat-input-row">
+                <input type="text" id="chatInput" placeholder="Ask anything about your logs..."
+                    onkeypress="if(event.key==='Enter') sendChat()">
+                <button class="analyze-btn" onclick="sendChat()" style="margin:0; padding:12px 24px;">Ask AI</button>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="analyze-btn btn-gray" onclick="resetPage()">Analyze another file</button>
             <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
         </div>
-
-        <!-- Loading -->
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Analyzing logs with AI...</p>
-        </div>
-
-        <!-- Results -->
-        <div class="results" id="results">
-            <div class="file-info">
-                File: <span id="filename"></span> &nbsp;|&nbsp; Total logs: <span id="total"></span>
-            </div>
-
-            <div class="stats-grid" id="statsGrid"></div>
-
-            <div class="section">
-                <h3>Errors & Critical Events</h3>
-                <div id="errorList"></div>
-            </div>
-
-            <div class="section">
-                <h3>AI Root Cause Analysis</h3>
-                <div class="ai-box" id="aiAnalysis"></div>
-            </div>
-
-            <div class="section">
-                <h3>Chat with your logs</h3>
-                <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="chatInput" placeholder="Ask a question about your logs..."
-                        onkeypress="if(event.key==='Enter') sendChat()"
-                        style="flex:1; background:#12151f; border:1px solid #2d3748; border-radius:8px; padding:12px; color:#e2e8f0; font-size:14px;">
-                    <button onclick="sendChat()" style="background:#6366f1; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Ask</button>
-                </div>
-            </div>
-
-            <div class="btn-row">
-                <button class="analyze-btn btn-gray" onclick="resetPage()">Analyze another file</button>
-                <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
-            </div>
-        </div>
-
-        <!-- History Section -->
-        <div id="historySection" style="display:none; margin-top:32px;">
-            <div class="section">
-                <h3>Upload History</h3>
-                <div id="historyList"></div>
-                <button class="analyze-btn btn-gray" onclick="hideHistory()" style="margin-top:16px;">Close History</button>
-            </div>
-        </div>
-
     </div>
 
-    <script>
-        let currentFile = '';
+    <div id="historySection" style="display:none; margin-top:32px;">
+        <div class="section glass">
+            <h3>Upload History</h3>
+            <div id="historyList"></div>
+            <button class="analyze-btn btn-gray" onclick="hideHistory()" style="margin-top:16px;">Close</button>
+        </div>
+    </div>
 
-        function updateFileName(input) {
-            document.getElementById('fileName').textContent = input.files[0]?.name || 'No file selected';
-        }
+</div>
 
-        async function uploadLog() {
-            const file = document.getElementById('logFile').files[0];
-            if (!file) { alert('Please select a log file!'); return; }
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let currentFile = '';
+    let logChart = null;
 
-            document.getElementById('uploadCard').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
+    // Particle system
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-            const formData = new FormData();
-            formData.append('file', file);
+    const particles = Array.from({length: 60}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        size: Math.random() * 2 + 0.5,
+        opacity: Math.random() * 0.4 + 0.1
+    }));
 
-            try {
-                const response = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
-                const data = await response.json();
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(99,102,241,${p.opacity})`;
+            ctx.fill();
+        });
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('results').style.display = 'block';
-                document.getElementById('filename').textContent = data.filename;
-                document.getElementById('total').textContent = data.total_logs;
-                currentFile = data.filename;
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
 
-                const colors = { INFO: 'info-val', WARNING: 'warning-val', ERROR: 'error-val', CRITICAL: 'critical-val' };
-                let statsHTML = '';
-                for (const [level, count] of Object.entries(data.summary)) {
-                    statsHTML += `<div class="stat-card"><div class="label">${level}</div><div class="value ${colors[level] || 'total-val'}">${count}</div></div>`;
-                }
-                document.getElementById('statsGrid').innerHTML = statsHTML;
-
-                let errorsHTML = '';
-                data.errors.forEach(e => {
-                    const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
-                    errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
-                });
-                document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
-                document.getElementById('aiAnalysis').textContent = data.ai_analysis;
-
-            } catch (err) {
-                alert('Error connecting to server. Make sure uvicorn is running!');
-                resetPage();
+    // 3D tilt effect
+    document.addEventListener('mousemove', e => {
+        document.querySelectorAll('.tilt').forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            const distance = Math.sqrt(x*x + y*y);
+            if (distance < 400) {
+                const tiltX = (y / rect.height) * 6;
+                const tiltY = -(x / rect.width) * 6;
+                card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateZ(5px)`;
+            } else {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
             }
-        }
+        });
+    });
 
-        async function sendChat() {
-            const question = document.getElementById('chatInput').value;
-            if (!question) return;
+    function updateFileName(input) {
+        document.getElementById('fileName').textContent = input.files[0]?.name || 'No file selected';
+    }
 
-            const messages = document.getElementById('chatMessages');
-            messages.innerHTML += `<div class="chat-msg-user"><span style="color:#6366f1;">You:</span> ${question}</div>`;
-            document.getElementById('chatInput').value = '';
-            messages.innerHTML += `<div class="chat-msg-ai" id="thinking"><span style="color:#68d391;">AI:</span> Thinking...</div>`;
-            messages.scrollTop = messages.scrollHeight;
+    function renderChart(summary) {
+        const labels = Object.keys(summary);
+        const values = Object.values(summary);
+        const colors = { INFO: '#63b3ed', WARNING: '#f6ad55', ERROR: '#fc8181', CRITICAL: '#e879f9' };
 
-            const r = await fetch('http://127.0.0.1:8000/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question, filename: currentFile })
-            });
-            const data = await r.json();
-            document.getElementById('thinking').outerHTML = `<div class="chat-msg-ai"><span style="color:#68d391;">AI:</span> ${data.answer}</div>`;
-            messages.scrollTop = messages.scrollHeight;
-        }
+        if (logChart) logChart.destroy();
 
-        async function showHistory() {
-            const r = await fetch('http://127.0.0.1:8000/history');
-            const history = await r.json();
+        const c = document.getElementById('logChart').getContext('2d');
+        logChart = new Chart(c, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: labels.map(l => colors[l] || '#718096'),
+                    borderColor: 'rgba(0,0,0,0.5)',
+                    borderWidth: 3,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#e2e8f0', font: { size: 13, family: 'Inter' }, padding: 20 }
+                    }
+                }
+            }
+        });
+    }
 
-            document.getElementById('historySection').style.display = 'block';
+    async function uploadLog() {
+        const file = document.getElementById('logFile').files[0];
+        if (!file) { alert('Please select a log file!'); return; }
 
-            let html = '';
-            history.reverse().forEach(h => {
-                html += `
-                <div class="history-item">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <span style="color:#e2e8f0; font-weight:500;">${h.filename}</span>
-                        <span style="color:#718096; font-size:12px;">${h.timestamp}</span>
-                    </div>
-                    <div style="display:flex; gap:16px; font-size:13px;">
-                        <span style="color:#63b3ed;">Total: ${h.total_logs}</span>
-                        <span style="color:#fc8181;">Errors: ${h.error_count}</span>
-                        <span style="color:#f6ad55;">Warnings: ${h.summary.WARNING || 0}</span>
-                    </div>
-                </div>`;
-            });
+        document.getElementById('uploadCard').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
 
-            document.getElementById('historyList').innerHTML = html || '<p style="color:#718096">No history yet</p>';
-        }
+        const formData = new FormData();
+        formData.append('file', file);
 
-        function hideHistory() {
-            document.getElementById('historySection').style.display = 'none';
-        }
+        try {
+            const response = await fetch('http://127.0.0.1:8000/upload', { method: 'POST', body: formData });
+            const data = await response.json();
 
-        function resetPage() {
-            document.getElementById('uploadCard').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('historySection').style.display = 'none';
-            document.getElementById('fileName').textContent = 'No file selected';
-            document.getElementById('logFile').value = '';
-            document.getElementById('chatMessages').innerHTML = '';
-            currentFile = '';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('filename').textContent = data.filename;
+            document.getElementById('total').textContent = data.total_logs;
+            currentFile = data.filename;
+
+            const colors = { INFO: 'info-val', WARNING: 'warning-val', ERROR: 'error-val', CRITICAL: 'critical-val' };
+            let statsHTML = '';
+            for (const [level, count] of Object.entries(data.summary)) {
+                statsHTML += `<div class="stat-card glass tilt"><div class="label">${level}</div><div class="value ${colors[level] || 'total-val'}">${count}</div></div>`;
+            }
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+            renderChart(data.summary);
+
+            let errorsHTML = '';
+            data.errors.forEach(e => {
+                const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
+                errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
+            });
+            document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
+            document.getElementById('aiAnalysis').textContent = data.ai_analysis;
+
+        } catch (err) {
+            alert('Error connecting to server. Make sure uvicorn is running!');
+            resetPage();
         }
-    </script>
+    }
+
+    async function sendChat() {
+        const question = document.getElementById('chatInput').value;
+        if (!question) return;
+
+        const messages = document.getElementById('chatMessages');
+        messages.innerHTML += `<div class="chat-msg-user"><span style="color:#a78bfa; font-weight:500;">You:</span> ${question}</div>`;
+        document.getElementById('chatInput').value = '';
+        messages.innerHTML += `<div class="chat-msg-ai" id="thinking"><span style="color:#68d391; font-weight:500;">AI:</span> Thinking...</div>`;
+        messages.scrollTop = messages.scrollHeight;
+
+        const r = await fetch('http://127.0.0.1:8000/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question, filename: currentFile })
+        });
+        const data = await r.json();
+        document.getElementById('thinking').outerHTML = `<div class="chat-msg-ai"><span style="color:#68d391; font-weight:500;">AI:</span> ${data.answer}</div>`;
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function showHistory() {
+        const r = await fetch('http://127.0.0.1:8000/history');
+        const history = await r.json();
+        document.getElementById('historySection').style.display = 'block';
+
+        let html = '';
+        history.reverse().forEach(h => {
+            html += `
+            <div class="history-item">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="color:#a78bfa; font-weight:500; font-family:'JetBrains Mono',monospace;">${h.filename}</span>
+                    <span style="color:#718096; font-size:12px; font-family:'JetBrains Mono',monospace;">${h.timestamp}</span>
+                </div>
+                <div style="display:flex; gap:20px; font-size:13px;">
+                    <span style="color:#63b3ed;">Total: ${h.total_logs}</span>
+                    <span style="color:#fc8181;">Errors: ${h.error_count}</span>
+                    <span style="color:#f6ad55;">Warnings: ${h.summary.WARNING || 0}</span>
+                </div>
+            </div>`;
+        });
+        document.getElementById('historyList').innerHTML = html || '<p style="color:#718096">No history yet</p>';
+    }
+
+    function hideHistory() {
+        document.getElementById('historySection').style.display = 'none';
+    }
+
+    function resetPage() {
+        document.getElementById('uploadCard').style.display = 'block';
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('historySection').style.display = 'none';
+        document.getElementById('fileName').textContent = 'No file selected';
+        document.getElementById('logFile').value = '';
+        document.getElementById('chatMessages').innerHTML = '';
+        currentFile = '';
+    }
+</script>
 </body>
 </html>
