@@ -1,3 +1,5 @@
+from fastapi.responses import StreamingResponse
+from backend.pdf_generator import generate_pdf_report
 from backend.database import save_to_history, load_history
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -72,3 +74,21 @@ async def chat_with_logs(request: ChatRequest):
 @app.get("/history")
 def get_history():
     return load_history()
+@app.get("/export/{filename}")
+def export_pdf(filename: str):
+    filepath = f"logs/{filename}"
+    if not os.path.exists(filepath):
+        return {"error": "File not found"}
+
+    logs = parse_log_file(filepath)
+    from collections import Counter
+    levels = [log["level"] for log in logs]
+    count = Counter(levels)
+    errors = [log for log in logs if log["level"] in ["ERROR", "CRITICAL"]]
+    ai_analysis = analyze_logs(errors)
+
+    pdf_buffer = generate_pdf_report(filename, len(logs), dict(count), errors, ai_analysis)
+
+    report_name = filename.replace('.log', '').replace('.txt', '')
+    headers = {"Content-Disposition": f'attachment; filename="{report_name}_report.pdf"'}
+    return StreamingResponse(pdf_buffer, media_type="application/pdf", headers=headers)
