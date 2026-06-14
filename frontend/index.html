@@ -316,7 +316,6 @@
         }
 
         .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap; }
-
         /* Tilt effect */
         .tilt { transform-style: preserve-3d; }
     </style>
@@ -381,6 +380,7 @@
 
         <div class="btn-row">
             <button class="analyze-btn btn-gray" onclick="resetPage()">Analyze another file</button>
+            <button class="analyze-btn" onclick="downloadReport()" style="background:linear-gradient(135deg,#10b981,#059669);">Download PDF Report</button>
             <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
         </div>
     </div>
@@ -428,6 +428,10 @@
         });
         requestAnimationFrame(animateParticles);
     }
+    function downloadReport() {
+    if (!currentFile) { alert('Please upload a log file first!'); return; }
+    window.open(`http://127.0.0.1:8000/export/${currentFile}`, '_blank');
+}
     animateParticles();
 
     window.addEventListener('resize', () => {
