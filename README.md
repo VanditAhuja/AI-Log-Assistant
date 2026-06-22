@@ -150,10 +150,4 @@ http://127.0.0.1:8000/app
 # Developer
 
 **Vandit Ahuja**
-HCLtech Internship Project — 2026
-
 ---
-
-# License
-
-This project was built as part of the HCLtech internship program.
