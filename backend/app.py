@@ -1,6 +1,5 @@
 from fastapi.responses import StreamingResponse
 from backend.pdf_generator import generate_pdf_report
-from backend.database import save_to_history, load_history
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, UploadFile, File
@@ -11,7 +10,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from parser.parser import parse_log_file
-from ai.ai_engine import analyze_logs
+from ai.ai_engine import analyze_logs, analyze_each_error
 from collections import Counter
 
 app = FastAPI()
@@ -45,14 +44,14 @@ async def upload_log(file: UploadFile = File(...)):
     errors = [log for log in logs if log["level"] in ["ERROR", "CRITICAL"]]
 
     ai_analysis = analyze_logs(errors)
-    save_to_history(file.filename, len(logs), dict(count), errors, ai_analysis)
+    individual_analyses = analyze_each_error(errors)
     return {
-       
         "filename": file.filename,
         "total_logs": len(logs),
         "summary": count,
         "errors": errors,
-        "ai_analysis": ai_analysis
+        "ai_analysis": ai_analysis,
+        "individual_analyses": individual_analyses
     }
 from pydantic import BaseModel
 
@@ -71,9 +70,6 @@ async def chat_with_logs(request: ChatRequest):
     from ai.ai_engine import chat_about_logs
     answer = chat_about_logs(logs, request.question)
     return {"answer": answer}
-@app.get("/history")
-def get_history():
-    return load_history()
 @app.get("/export/{filename}")
 def export_pdf(filename: str):
     filepath = f"logs/{filename}"

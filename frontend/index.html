@@ -338,7 +338,6 @@
             style="color:#a0aec0; background:rgba(45,55,72,0.6); border:1px solid rgba(99,102,241,0.3); padding:12px 20px; border-radius:8px; font-size:14px; cursor:pointer; width:320px;">
         <div class="file-name" id="fileName">No file selected</div>
         <button class="analyze-btn" onclick="uploadLog()">Analyze with AI</button>
-        <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
     </div>
 
     <div class="loading" id="loading">
@@ -381,18 +380,8 @@
         <div class="btn-row">
             <button class="analyze-btn btn-gray" onclick="resetPage()">Analyze another file</button>
             <button class="analyze-btn" onclick="downloadReport()" style="background:linear-gradient(135deg,#10b981,#059669);">Download PDF Report</button>
-            <button class="analyze-btn btn-gray" onclick="showHistory()">View History</button>
         </div>
     </div>
-
-    <div id="historySection" style="display:none; margin-top:32px;">
-        <div class="section glass">
-            <h3>Upload History</h3>
-            <div id="historyList"></div>
-            <button class="analyze-btn btn-gray" onclick="hideHistory()" style="margin-top:16px;">Close</button>
-        </div>
-    </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -521,16 +510,43 @@
             renderChart(data.summary);
 
             let errorsHTML = '';
-            data.errors.forEach(e => {
+            const analyses = data.individual_analyses || [];
+            data.errors.forEach((e, i) => {
                 const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
-                errorsHTML += `<div class="error-item"><div class="time">${e.date} ${e.time || ''}</div><div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div></div>`;
+                const analysis = analyses[i] || 'No analysis available';
+                errorsHTML += `
+    <div class="error-item" style="cursor:pointer;" onclick="toggleErrorDetail(${i})">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div class="time">${e.date} ${e.time || ''}</div>
+                <div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div>
+            </div>
+            <span id="arrow-${i}" style="color:#6366f1; font-size:18px; transition:transform 0.2s;">›</span>
+        </div>
+        <div id="detail-${i}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); font-size:13px; color:#a0aec0; line-height:1.6;">
+            ${analysis}
+        </div>
+    </div>`;
             });
             document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
-            document.getElementById('aiAnalysis').textContent = data.ai_analysis;
 
-        } catch (err) {
+        } 
+        catch (err) {
             alert('Error connecting to server. Make sure uvicorn is running!');
             resetPage();
+        }
+    }
+
+    function toggleErrorDetail(i) {
+        const detail = document.getElementById(`detail-${i}`);
+        const arrow = document.getElementById(`arrow-${i}`);
+        if (!detail || !arrow) return;
+        if (detail.style.display === 'none') {
+            detail.style.display = 'block';
+            arrow.style.transform = 'rotate(90deg)';
+        } else {
+            detail.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
         }
     }
 
@@ -553,34 +569,6 @@
         document.getElementById('thinking').outerHTML = `<div class="chat-msg-ai"><span style="color:#68d391; font-weight:500;">AI:</span> ${data.answer}</div>`;
         messages.scrollTop = messages.scrollHeight;
     }
-
-    async function showHistory() {
-        const r = await fetch('http://127.0.0.1:8000/history');
-        const history = await r.json();
-        document.getElementById('historySection').style.display = 'block';
-
-        let html = '';
-        history.reverse().forEach(h => {
-            html += `
-            <div class="history-item">
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span style="color:#a78bfa; font-weight:500; font-family:'JetBrains Mono',monospace;">${h.filename}</span>
-                    <span style="color:#718096; font-size:12px; font-family:'JetBrains Mono',monospace;">${h.timestamp}</span>
-                </div>
-                <div style="display:flex; gap:20px; font-size:13px;">
-                    <span style="color:#63b3ed;">Total: ${h.total_logs}</span>
-                    <span style="color:#fc8181;">Errors: ${h.error_count}</span>
-                    <span style="color:#f6ad55;">Warnings: ${h.summary.WARNING || 0}</span>
-                </div>
-            </div>`;
-        });
-        document.getElementById('historyList').innerHTML = html || '<p style="color:#718096">No history yet</p>';
-    }
-
-    function hideHistory() {
-        document.getElementById('historySection').style.display = 'none';
-    }
-
     function resetPage() {
         document.getElementById('uploadCard').style.display = 'block';
         document.getElementById('results').style.display = 'none';

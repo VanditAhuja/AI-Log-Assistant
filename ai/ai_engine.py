@@ -39,6 +39,32 @@ Keep your response clear and concise."""
         return f"AI analysis unavailable: {str(e)}"
 
 
+def analyze_each_error(errors):
+    results = {}
+    for i, e in enumerate(errors):
+        error_text = f"[{e['date']} {e.get('time', '')}] {e['level']}: {e['message']}"
+        prompt = f"""Analyze this single log error briefly:
+
+{error_text}
+
+Give:
+1. Root Cause (1 sentence)
+2. Fix (1 sentence)
+
+Be very concise, max 50 words total."""
+
+        try:
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100
+            )
+            results[i] = response.choices[0].message.content
+        except Exception as ex:
+            results[i] = f"Analysis unavailable: {str(ex)}"
+    return results
+
+
 def chat_about_logs(logs, question):
     log_text = "\n".join([
         f"[{l['date']} {l.get('time','')}] {l['level']}: {l['message']}"
