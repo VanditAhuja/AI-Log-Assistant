@@ -126,19 +126,9 @@ def generate_pdf_report(filename, total_logs, summary, errors, ai_analysis):
     elements.append(Paragraph("AI Root Cause Analysis", style('h2', 14, bold=True, color=dark, space_after=10)))
 
     # Add purple left border box
-    ai_data = [[Paragraph(ai_analysis.replace('\n', '<br/>'),
-                          style('ai', 11, color=dark, space_after=0, leading=18))]]
-    ai_table = Table(ai_data, colWidths=[460])
-    ai_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), light_gray),
-        ('LEFTPADDING', (0,0), (-1,-1), 16),
-        ('RIGHTPADDING', (0,0), (-1,-1), 16),
-        ('TOPPADDING', (0,0), (-1,-1), 14),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 14),
-        ('LINEBEFORE', (0,0), (0,-1), 4, purple),
-        ('GRID', (0,0), (-1,-1), 0, white),
-    ]))
-    elements.append(ai_table)
+    # AI Analysis as plain paragraph (allows page breaks for long content)
+    ai_text = ai_analysis.replace('\n', '<br/>')
+    elements.append(Paragraph(ai_text, style('ai', 11, color=dark, space_after=0, leading=18, indent=16)))
     elements.append(Spacer(1, 24))
 
     # ─── FOOTER ───
