@@ -363,11 +363,6 @@
         </div>
 
         <div class="section glass tilt">
-            <h3>AI Root Cause Analysis</h3>
-            <div class="ai-box" id="aiAnalysis"></div>
-        </div>
-
-        <div class="section glass tilt">
             <h3>Chat with your logs</h3>
             <div id="chatMessages" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></div>
             <div class="chat-input-row">
@@ -510,23 +505,37 @@
             renderChart(data.summary);
 
             let errorsHTML = '';
-            const analyses = data.individual_analyses || [];
-            data.errors.forEach((e, i) => {
-                const badgeClass = e.level === 'CRITICAL' ? 'badge-critical' : 'badge-error';
-                const analysis = analyses[i] || 'No analysis available';
+            const sortedErrors = data.errors.map((e, i) => ({ ...e, originalIndex: i }))
+                .sort((a, b) => {
+                    if (a.level === 'CRITICAL' && b.level !== 'CRITICAL') return -1;
+                    if (a.level !== 'CRITICAL' && b.level === 'CRITICAL') return 1;
+                    return 0;
+                });
+
+            sortedErrors.forEach((e) => {
+                const i = e.originalIndex;
+                const badgeClass = e.level === 'CRITICAL'
+                    ? 'critical-val'
+                    : e.level === 'ERROR'
+                        ? 'error-val'
+                        : e.level === 'WARNING'
+                            ? 'warning-val'
+                            : 'info-val';
+                const analysis = data.individual_analyses[i] || data.individual_analyses[String(i)] || 'No additional analysis available.';
+
                 errorsHTML += `
-    <div class="error-item" style="cursor:pointer;" onclick="toggleErrorDetail(${i})">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <div class="time">${e.date} ${e.time || ''}</div>
-                <div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div>
-            </div>
-            <span id="arrow-${i}" style="color:#6366f1; font-size:18px; transition:transform 0.2s;">›</span>
-        </div>
-        <div id="detail-${i}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); font-size:13px; color:#a0aec0; line-height:1.6;">
-            ${analysis}
-        </div>
-    </div>`;
+                    <div class="error-item" style="cursor:pointer;" onclick="toggleErrorDetail(${i})">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div class="time">${e.date} ${e.time || ''}</div>
+                                <div class="msg"><span class="badge ${badgeClass}">${e.level}</span>${e.message}</div>
+                            </div>
+                            <span id="arrow-${i}" style="color:#6366f1; font-size:18px; transition:transform 0.2s;">›</span>
+                        </div>
+                        <div id="detail-${i}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); font-size:13px; color:#a0aec0; line-height:1.6;">
+                            ${analysis}
+                        </div>
+                    </div>`;
             });
             document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
 
