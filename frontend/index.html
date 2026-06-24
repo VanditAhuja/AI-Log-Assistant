@@ -326,7 +326,6 @@
 
 <div class="header">
     <h1>AI Log Intelligence Assistant</h1>
-    <span>HCLtech Internship</span>
 </div>
 
 <div class="container">
@@ -492,6 +491,7 @@
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('results').style.display = 'block';
+            document.title = `${data.filename} — AI Log Assistant`;
             document.getElementById('filename').textContent = data.filename;
             document.getElementById('total').textContent = data.total_logs;
             currentFile = data.filename;
@@ -580,6 +580,7 @@
     }
     function resetPage() {
         document.getElementById('uploadCard').style.display = 'block';
+        document.title = 'AI Log Assistant';
         document.getElementById('results').style.display = 'none';
         document.getElementById('loading').style.display = 'none';
         document.getElementById('historySection').style.display = 'none';
