@@ -537,7 +537,12 @@
                         </div>
                     </div>`;
             });
-            document.getElementById('errorList').innerHTML = errorsHTML || '<p style="color:#718096">No errors found</p>';
+            document.getElementById('errorList').innerHTML = errorsHTML || `
+    <div style="text-align:center; padding:32px 16px; color:#68d391;">
+        <div style="font-size:32px; margin-bottom:10px;">✅</div>
+        <div style="font-size:15px; font-weight:500; margin-bottom:4px;">No errors detected</div>
+        <div style="font-size:13px; color:#718096;">Your system is running clean — all logs are healthy.</div>
+    </div>`;
 
         } 
         catch (err) {
