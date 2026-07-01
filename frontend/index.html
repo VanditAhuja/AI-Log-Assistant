@@ -579,8 +579,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ question, filename: currentFile })
         });
-        const data = await r.json();
-        document.getElementById('thinking').outerHTML = `<div class="chat-msg-ai"><span style="color:#68d391; font-weight:500;">AI:</span> ${data.answer}</div>`;
+        const data = await r.json();const formatted = data.answer
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^\* /gm, '• ')
+    .replace(/^\+ /gm, '&nbsp;&nbsp;◦ ')
+    .replace(/\n/g, '<br>');
+document.getElementById('thinking').outerHTML = `<div class="chat-msg-ai"><span style="color:#68d391; font-weight:500;">AI:</span><br><br>${formatted}</div>`;
+        
         messages.scrollTop = messages.scrollHeight;
     }
     function resetPage() {
