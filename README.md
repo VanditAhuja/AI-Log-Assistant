@@ -45,10 +45,4 @@ Open:
 http://127.0.0.1:8000/app
 ```
 
-## Screenshots
 
-![Landing page](screenshots/landing.png)
-
-![Summary and chart](screenshots/summary.png)
-
-![Error list and chat](screenshots/chat.png)
