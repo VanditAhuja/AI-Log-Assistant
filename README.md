@@ -44,5 +44,17 @@ Open:
 ```text
 http://127.0.0.1:8000/app
 ```
+## Screenshots
 
+### Upload
+![Upload](screenshots/upload.png)
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### AI Error Analysis
+![Errors](screenshots/errors.png)
+
+### Chat with Logs
+![Chat](screenshots/chat.png)
 
