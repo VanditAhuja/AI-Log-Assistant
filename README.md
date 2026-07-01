@@ -1,153 +1,56 @@
-# AI-Powered Log Intelligence & Debugging Assistant
+# AI Log Intelligence Assistant
 
-> An enterprise-grade AI log analysis system built during HCLtech Internship
+A simple AI-powered app for analyzing application logs. Upload a .log or .txt file, view log summaries and errors, ask questions about the logs, and download a PDF report with AI-generated insights.
 
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100-green)
-![AI](https://img.shields.io/badge/AI-Groq%20LLaMA3-purple)
+## Features
 
----
+- Upload and parse log files
+- Show log-level summary and error highlights
+- AI-based root cause analysis and fix suggestions
+- Chat with the uploaded logs
+- Download PDF reports
 
-# Project Overview
+## Tech Stack
 
-A full-stack AI-based log analysis system that allows developers to upload application log files and interact with them using natural language queries. The system uses AI to identify errors, summarize logs, suggest probable root causes and fixes — helping in faster debugging by converting raw logs into structured insights.
+- Python + FastAPI
+- Groq API (Llama 3.3)
+- HTML/CSS/JavaScript
+- Chart.js + ReportLab
 
-This project simulates an enterprise-level observability tool used in modern IT operations.
+## Setup
 
----
-
-# Features
-
--  **Log File Upload** — Upload any `.log` or `.txt` file
--  **Automatic Error Detection** — Extracts ERROR and CRITICAL events
--  **Visual Dashboard** — Charts and stats for log distribution
--  **AI Root Cause Analysis** — Powered by Groq LLaMA3 AI
--  **Natural Language Chat** — Ask questions about your logs
--  **Upload History** — Track previously analyzed log files
--  **PDF Export** — Download professional analysis reports
-
----
-
-# Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python, FastAPI |
-| AI | Groq API (LLaMA3-70B) |
-| Frontend | HTML, CSS, JavaScript |
-| PDF | ReportLab |
-| Version Control | Git, GitHub |
-
----
-
-# Project Structure
-AI-Log-Assistant/
-
-│
-
-├── backend/
-
-│   ├── app.py          # FastAPI server & API endpoints
-
-│   ├── database.py     # Log history management
-
-│   └── pdf_generator.py # PDF report generation
-
-│
-
-├── ai/
-
-│   └── ai_engine.py    # Groq AI integration
-
-│
-
-├── parser/
-
-│   └── parser.py       # Log file parser
-
-│
-
-├── frontend/
-
-│   └── index.html      # Web dashboard
-
-│
-
-├── logs/
-
-│   └── sample.log      # Sample log file
-
-│
-
-├── requirements.txt
-
-└── README.md
----
-
-# Getting Started
-
-# 1. Clone the repository
 ```bash
-git clone https://github.com/VanditAhuja/AI-Log-Assistant.git
-cd AI-Log-Assistant
-```
-
-# 2. Install dependencies
-```bash
+git clone <repo-url>
+cd Project
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-# 3. Set up environment variables
-Create a `.env` file in the root directory:
-GROQ_API_KEY=your-groq-api-key-here
-Get your free Groq API key at: https://console.groq.com
+Create a .env file:
 
-# 4. Run the server
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Run:
+
 ```bash
 uvicorn backend.app:app --reload
 ```
 
-# 5. Open the app
+Open:
+
+```text
 http://127.0.0.1:8000/app
----
+```
 
-# Screenshots
+## Screenshots
 
-# Dashboard
-- Upload log files and get instant AI analysis
-- Visual charts showing log distribution
-- Error detection with timestamps
+![Landing page](screenshots/landing.png)
 
-# AI Analysis
-- Root cause analysis
-- Impact assessment
-- Suggested fixes
-- Prevention strategies
+![Summary and chart](screenshots/summary.png)
 
-# Chat Interface
-- Ask natural language questions about your logs
-- Get instant AI-powered answers
+![Error list and chat](screenshots/chat.png)
 
-# PDF Report
-- Download professional analysis reports
-- Clean white professional format
-
----
-
-# API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Health check |
-| GET | `/app` | Web dashboard |
-| POST | `/upload` | Upload and analyze log file |
-| POST | `/chat` | Chat about logs |
-| GET | `/history` | Get upload history |
-| GET | `/export/{filename}` | Download PDF report |
-
----
-
-# Developer
-
-**Vandit Ahuja**
----
+> Place screenshot files in a `screenshots/` folder next to `README.md` with the names above.
