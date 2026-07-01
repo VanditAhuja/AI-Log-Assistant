@@ -52,5 +52,3 @@ http://127.0.0.1:8000/app
 ![Summary and chart](screenshots/summary.png)
 
 ![Error list and chat](screenshots/chat.png)
-
-> Place screenshot files in a `screenshots/` folder next to `README.md` with the names above.
